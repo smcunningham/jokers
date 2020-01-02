@@ -11,7 +11,7 @@ import (
 
 // Datastore defines DB functionality
 type Datastore interface {
-	UserLogin(User) bool
+	UserLogin(User) (User, bool)
 	InsertUser(User) error
 }
 
@@ -40,7 +40,7 @@ func OpenDB(cfg DbConfig) (*DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("Successful connection to database")
+	fmt.Println("INFO:OpenDB:Successful connection to database")
 	return &DB{db}, nil
 }
 
@@ -49,36 +49,48 @@ type User struct {
 	UserID    int       `json:"userId" ,db:"user_id"`
 	Username  string    `json:"username" ,db:"username"`
 	Password  string    `json:"password" ,db:"password"`
+	FirstName string    `json:"firstname" ,db:"firstname"`
+	LastName  string    `json:"lastname" ,db:"lastname"`
 	Email     string    `json:"email" ,db:"email"`
 	CreatedOn time.Time `json:"createdOn" ,db:"created_on"`
 	FavJokes  []int     `json:"favJokes" ,db:"fav_jokes"`
 }
 
 // UserLogin is called from login template
-func (db *DB) UserLogin(u User) bool {
+func (db *DB) UserLogin(u User) (User, bool) {
 	// Try to find email in user table
-	loginStmt := `SELECT password FROM users WHERE email=$1`
+	loginStmt := `SELECT username, password, email, firstname, lastname, created_on FROM users WHERE email=$1`
 	row := db.QueryRow(loginStmt, u.Email)
 
 	storedCreds := User{}
 
-	switch err := row.Scan(&storedCreds.Password); err {
+	switch err := row.Scan(&storedCreds.Username,
+		&storedCreds.Password,
+		&storedCreds.Email,
+		&storedCreds.FirstName,
+		&storedCreds.LastName,
+		&storedCreds.CreatedOn); err {
 	case sql.ErrNoRows:
 		fmt.Printf("ERROR:Scan:No rows returned, username not found!")
-		return false
+		return User{}, false
 	case nil:
 		err := checkPasswordHash(u.Password, storedCreds.Password)
 		if err != nil {
 			// No match, probably `hashedPassword is not the hash of the given password`
 			fmt.Printf("ERROR:CheckPasswordHash:%s\n", err.Error())
-			return false
+			return User{}, false
 		}
-		// Passwords match
-		return true
+		// Passwords match, but don't return password with User{} because this data will be passed to HTML templates
+		return User{
+			Username:  storedCreds.Username,
+			Email:     storedCreds.Email,
+			FirstName: storedCreds.FirstName,
+			LastName:  storedCreds.LastName,
+			CreatedOn: storedCreds.CreatedOn}, true
 	default:
 		// All other errors
 		fmt.Printf("ERROR:UserLogin:%s\n", err.Error())
-		return false
+		return User{}, false
 	}
 }
 
@@ -89,10 +101,12 @@ func (db *DB) InsertUser(u User) error {
 		return err
 	}
 
-	if _, err := db.Query(`INSERT INTO users(username, password, email, created_on) values($1, $2, $3, $4)`,
+	if _, err := db.Query(`INSERT INTO users(username, password, email, firstname, lastname, created_on) values($1, $2, $3, $4, $5, $6)`,
 		u.Username,
 		hashedPassword,
 		u.Email,
+		u.FirstName,
+		u.LastName,
 		time.Now()); err != nil {
 		return err
 	}
