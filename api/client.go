@@ -50,7 +50,6 @@ type CustomResponse struct {
 }
 
 var loginTmpl, homeTmpl, registrationTmpl *template.Template
-var td TemplateData
 
 func init() {
 	// Create and cache templates
@@ -104,6 +103,7 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Add random joke to template data
+	td := TemplateData{}
 	td.RandomJoke = random
 
 	// Create a personalized joke
@@ -195,6 +195,7 @@ func (c *Client) RandomJokeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Add random joke to template data
+	td := TemplateData{}
 	td.RandomJoke = joke
 
 	// Load random joke on home template
@@ -221,6 +222,7 @@ func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Add personal joke to template data
+	td := TemplateData{}
 	td.PersonalJoke = joke
 
 	// Load personal joke on home template
@@ -254,6 +256,7 @@ func (c *Client) CustomJokeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Add custom joke to template data
+	td := TemplateData{}
 	td.CustomJoke = joke
 
 	// Load custom joke on home template
