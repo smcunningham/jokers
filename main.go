@@ -16,7 +16,7 @@ import (
 var session *scs.Session
 
 func main() {
-	// Load .env vars
+	// Load .env vars to configure DB
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("ERROR:Load:%s\n", err.Error())
@@ -41,7 +41,7 @@ func main() {
 	// Create a client and assign our DB to it for use with http handlers
 	client := &api.Client{DB: db}
 
-	// Session will be used to store user info ie first, last name
+	// Session will be used to store user info ie. first, last name
 	// memstore is default storage method, uses in-memory storage
 	client.Session = scs.NewSession()
 	client.Session.Store = memstore.New()

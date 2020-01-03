@@ -62,6 +62,7 @@ func (db *DB) UserLogin(u User) (User, bool) {
 	loginStmt := `SELECT username, password, email, firstname, lastname, created_on FROM users WHERE email=$1`
 	row := db.QueryRow(loginStmt, u.Email)
 
+	// Data from the db will be stored in this struct
 	storedCreds := User{}
 
 	switch err := row.Scan(&storedCreds.Username,
@@ -71,27 +72,32 @@ func (db *DB) UserLogin(u User) (User, bool) {
 		&storedCreds.LastName,
 		&storedCreds.CreatedOn); err {
 	case sql.ErrNoRows:
+		// No match
 		fmt.Printf("ERROR:Scan:No rows returned, username not found!")
 		return User{}, false
-	case nil:
-		err := checkPasswordHash(u.Password, storedCreds.Password)
-		if err != nil {
-			// No match, probably `hashedPassword is not the hash of the given password`
-			fmt.Printf("ERROR:CheckPasswordHash:%s\n", err.Error())
-			return User{}, false
-		}
-		// Passwords match, but don't return password with User{} because this data will be passed to HTML templates
-		return User{
-			Username:  storedCreds.Username,
-			Email:     storedCreds.Email,
-			FirstName: storedCreds.FirstName,
-			LastName:  storedCreds.LastName,
-			CreatedOn: storedCreds.CreatedOn}, true
 	default:
 		// All other errors
 		fmt.Printf("ERROR:UserLogin:%s\n", err.Error())
 		return User{}, false
+	case nil:
+		// Found user in table
+		fmt.Printf("INFO:Scan: %s found, checking password\n", storedCreds.Username)
 	}
+
+	err := checkPasswordHash(u.Password, storedCreds.Password)
+	if err != nil {
+		// No match, probably `hashedPassword is not the hash of the given password`
+		fmt.Printf("ERROR:CheckPasswordHash:%s\n", err.Error())
+		return User{}, false
+	}
+
+	// Passwords match, but don't return password with User{} because this data will be passed to HTML templates
+	return User{
+		Username:  storedCreds.Username,
+		Email:     storedCreds.Email,
+		FirstName: storedCreds.FirstName,
+		LastName:  storedCreds.LastName,
+		CreatedOn: storedCreds.CreatedOn}, true
 }
 
 // InsertUser inserts a new user into the user table
@@ -101,6 +107,7 @@ func (db *DB) InsertUser(u User) error {
 		return err
 	}
 
+	// Insert new user into db
 	if _, err := db.Query(`INSERT INTO users(username, password, email, firstname, lastname, created_on) values($1, $2, $3, $4, $5, $6)`,
 		u.Username,
 		hashedPassword,
