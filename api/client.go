@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"jokers/models"
-	"log"
 	"net/http"
 
 	"github.com/alexedwards/scs/v2"
@@ -69,7 +68,7 @@ func (c *Client) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("login", r)
 
 	if err := loginTmpl.ExecuteTemplate(w, "login", nil); err != nil {
-		log.Printf("ERROR:LoginHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:LoginHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -92,7 +91,7 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		// Create a random joke
 		random, err := doReq(apiURL)
 		if err != nil {
-			log.Printf("ERROR:HomeHandler:%s", err)
+			fmt.Printf("ERROR:HomeHandler:%s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -101,7 +100,7 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		// Create a personalized joke
 		personal, err := personalJoke(user)
 		if err != nil {
-			log.Printf("ERROR:HomeHandler:%s", err)
+			fmt.Printf("ERROR:HomeHandler:%s", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -110,14 +109,14 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		td.User = user
 
 		if err := homeTmpl.ExecuteTemplate(w, "home", td); err != nil {
-			log.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
+			fmt.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
 	}
 	// Error rendoring home page, return to login
 	if err := loginTmpl.ExecuteTemplate(w, "login", nil); err != nil {
-		log.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -127,7 +126,7 @@ func (c *Client) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("signupHandler", r)
 
 	if err := registrationTmpl.ExecuteTemplate(w, "registration", nil); err != nil {
-		log.Printf("ERROR:SignupHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:SignupHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -140,10 +139,10 @@ func (c *Client) SignupActionHandler(w http.ResponseWriter, r *http.Request) {
 	pwdConfirm := r.FormValue("password_confirm")
 
 	if !(pwd == pwdConfirm) {
-		log.Println("Passwords do not match, redirecting to registration page")
+		fmt.Println("Passwords do not match, redirecting to registration page")
 
 		if err := registrationTmpl.ExecuteTemplate(w, "registration", nil); err != nil {
-			log.Printf("ERROR:SignupHandler:Failed to execute template: %s", err.Error())
+			fmt.Printf("ERROR:SignupHandler:Failed to execute template: %s", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 		return
@@ -167,7 +166,7 @@ func (c *Client) SignupActionHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("INFO:SignupActionHandler:Inserted user into database: %+v\n", creds)
 	if err := loginTmpl.ExecuteTemplate(w, "login", nil); err != nil {
-		log.Printf("ERROR:SignupActionHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:SignupActionHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -185,7 +184,7 @@ func (c *Client) RandomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	td.RandomJoke = joke
 
 	if err := homeTmpl.ExecuteTemplate(w, "random", td); err != nil {
-		log.Printf("ERROR:RandomJokeHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:RandomJokeHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -206,7 +205,7 @@ func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 	td.PersonalJoke = joke
 
 	if err := homeTmpl.ExecuteTemplate(w, "personal", td); err != nil {
-		log.Printf("ERROR:PersonalJokeHandler:Failed to execute template: %s", err.Error())
+		fmt.Printf("ERROR:PersonalJokeHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -231,7 +230,7 @@ func (c *Client) CustomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	td.CustomJoke = joke
 
 	if err := homeTmpl.ExecuteTemplate(w, "custom", td); err != nil {
-		log.Printf("ERROR:CustomJokeHandler:%s", err.Error())
+		fmt.Printf("ERROR:CustomJokeHandler:%s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

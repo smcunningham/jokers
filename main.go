@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"jokers/api"
 	"jokers/models"
-	"log"
 	"net/http"
 	"os"
 
@@ -64,5 +63,5 @@ func main() {
 	router.HandleFunc("/jokes/custom", client.CustomJokeHandler)
 
 	http.ListenAndServe(":3000", client.Session.LoadAndSave(router))
-	log.Println("listening...")
+	fmt.Println("listening...")
 }
