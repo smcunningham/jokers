@@ -44,6 +44,12 @@ type JokeData struct {
 	Categories []string `json:"categories"`
 }
 
+// CustomResponse is used to name data from XHR requests
+type CustomResponse struct {
+	FirstName string `json:"first"`
+	LastName  string `json:"last"`
+}
+
 var loginTmpl, homeTmpl, registrationTmpl *template.Template
 var td TemplateData
 
@@ -181,7 +187,7 @@ func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 
 	joke, err := personalJoke(user)
 	if err != nil {
-		fmt.Printf("ERROR:PersonalJokeHandler:%s", err)
+		fmt.Printf("ERROR:PersonalJokeHandler:%s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -189,6 +195,31 @@ func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := homeTmpl.ExecuteTemplate(w, "personal", td); err != nil {
 		log.Printf("ERROR:PersonalJokeHandler:Failed to execute template: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+}
+
+// CustomJokeHandler handles custom jokes generated from the custom modal on the home page
+func (c *Client) CustomJokeHandler(w http.ResponseWriter, r *http.Request) {
+	consoleLog("CustomJokeHandler", r)
+
+	res := CustomResponse{}
+	err := json.NewDecoder(r.Body).Decode(&res)
+	if err != nil {
+		fmt.Printf("ERROR:CustomJokeHandler:%s", err.Error())
+	}
+
+	user := models.User{FirstName: res.FirstName, LastName: res.LastName}
+
+	joke, err := personalJoke(user)
+	if err != nil {
+		fmt.Printf("ERROR:CustomJokeHandler:%s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	td.CustomJoke = joke
+
+	if err := homeTmpl.ExecuteTemplate(w, "custom", td); err != nil {
+		log.Printf("ERROR:CustomJokeHandler:%s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }

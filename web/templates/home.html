@@ -95,17 +95,64 @@
         <div class="card h-100">
           <h4 class="card-header">Custom Joke</h4>
           {{block "custom" .}}
-          <div class="card-body" id="customJoke">
-            <p class="card-text">This is where a joke will be displayed.. the user will be able to customize the name, joke category, explicit/non-explicit etc.</p>
+          <div class="card-body" id="cJoke">
+            <p class="card-text">{{.CustomJoke.Joke}}</p>
+              <p class="card-text" id="customStockText">Click Generate to create a custom joke!</p>
           </div>
           {{end}}
           <div class="card-footer">
-            <a href="#" class="btn btn-primary">Generate</a>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#customModal">Generate</button>
           </div>
         </div>
       </div>
     </div>
     <!-- /.row -->
+
+    <!-- Modal -->
+    <div id="customModal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <!-- Modal content -->
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <div class="modal-body">
+              <fieldset>
+                <div id="legend">
+                  <legend class="">Custom Joke</legend>
+                </div>
+
+                <div class="control-group">
+                  <!-- First Name -->
+                  <label class="control-label"  for="firstname">First Name</label>
+                  <div class="controls">
+                    <input type="text" id="firstname" name="firstname" placeholder="" class="input-xlarge">
+                  </div>
+                </div>  
+
+                <div class="control-group">
+                  <!-- Last Name -->
+                  <label class="control-label" for="lastname">Last Name</label>
+                  <div class="controls">
+                    <input type="text" id="lastname" name="lastname" placeholder="" class="input-xlarge">
+                  </div>
+                </div>
+                <br>
+
+                <div class="control-group">
+                  <div class="modal-footer">
+                    <!-- Button -->
+                    <div class="controls">
+                      <button id="btnSubmit" type="submit" class="btn btn-primary" onclick="customJoke()">Generate</button>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <hr>
 
@@ -134,7 +181,7 @@
   <script src="web/static/business-pages/vendor/jquery/jquery.min.js"></script>
   <script src="web/static/business-pages/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Jokes JS scripts-->
+  <!-- Jokes JS scripts -->
   <script src="web/static/business-pages/js/home.js"></script>
 
 </body>

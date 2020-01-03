@@ -42,6 +42,8 @@ func main() {
 	// Create a client and assign our DB to it for use with http handlers
 	client := &api.Client{DB: db}
 
+	// Session will be used to store user info ie first, last name
+	// memstore is default storage method, uses in-memory storage
 	client.Session = scs.NewSession()
 	client.Session.Store = memstore.New()
 
@@ -59,6 +61,7 @@ func main() {
 
 	router.HandleFunc("/jokes/random", client.RandomJokeHandler)
 	router.HandleFunc("/jokes/personal", client.PersonalJokeHandler)
+	router.HandleFunc("/jokes/custom", client.CustomJokeHandler)
 
 	log.Println("listening...")
 	http.ListenAndServe(":3000", client.Session.LoadAndSave(router))
