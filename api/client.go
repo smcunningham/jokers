@@ -82,44 +82,43 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("pass"),
 	}
 
-	user, ok := c.DB.UserLogin(creds)
-	if ok {
-		// Save name for personalized jokes
-		c.Session.Put(r.Context(), "firstname", user.FirstName)
-		c.Session.Put(r.Context(), "lastname", user.LastName)
-
-		// Create a random joke
-		random, err := doReq(apiURL)
-		if err != nil {
-			fmt.Printf("ERROR:HomeHandler:%s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		// Add random joke to template data
-		td.RandomJoke = random
-
-		// Create a personalized joke
-		personal, err := personalJoke(user)
-		if err != nil {
-			fmt.Printf("ERROR:HomeHandler:%s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		// Add personal joke to template data
-		td.PersonalJoke = personal
-
-		td.User = user
-
-		// Open home page template
-		if err := homeTmpl.ExecuteTemplate(w, "home", td); err != nil {
+	user, err := c.DB.UserLogin(creds)
+	if err != nil {
+		// Error rendoring home page, return to login
+		if err := loginTmpl.ExecuteTemplate(w, "login", nil); err != nil {
 			fmt.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+	}
+
+	// Save name for personalized jokes
+	c.Session.Put(r.Context(), "firstname", user.FirstName)
+	c.Session.Put(r.Context(), "lastname", user.LastName)
+
+	// Create a random joke
+	random, err := doReq(apiURL)
+	if err != nil {
+		fmt.Printf("ERROR:HomeHandler:%s", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// Error rendoring home page, return to login
-	if err := loginTmpl.ExecuteTemplate(w, "login", nil); err != nil {
+	// Add random joke to template data
+	td.RandomJoke = random
+
+	// Create a personalized joke
+	personal, err := personalJoke(user)
+	if err != nil {
+		fmt.Printf("ERROR:HomeHandler:%s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// Add personal joke and user to template data
+	td.PersonalJoke = personal
+	td.User = user
+
+	// Open home page template
+	if err := homeTmpl.ExecuteTemplate(w, "home", td); err != nil {
 		fmt.Printf("ERROR:HomeHandler:Failed to execute template: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return

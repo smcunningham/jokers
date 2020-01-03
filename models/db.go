@@ -11,7 +11,7 @@ import (
 
 // Datastore defines DB functionality
 type Datastore interface {
-	UserLogin(User) (User, bool)
+	UserLogin(User) (User, error)
 	InsertUser(User) error
 }
 
@@ -57,7 +57,7 @@ type User struct {
 }
 
 // UserLogin is called from login template
-func (db *DB) UserLogin(u User) (User, bool) {
+func (db *DB) UserLogin(u User) (User, error) {
 	// Try to find email in user table
 	loginStmt := `SELECT username, password, email, firstname, lastname, created_on FROM users WHERE email=$1`
 	row := db.QueryRow(loginStmt, u.Email)
@@ -74,11 +74,11 @@ func (db *DB) UserLogin(u User) (User, bool) {
 	case sql.ErrNoRows:
 		// No match
 		fmt.Printf("ERROR:Scan:No rows returned, username not found!")
-		return User{}, false
+		return User{}, err
 	default:
 		// All other errors
 		fmt.Printf("ERROR:UserLogin:%s\n", err.Error())
-		return User{}, false
+		return User{}, err
 	case nil:
 		// Found user in table
 		fmt.Printf("INFO:Scan: %s found, checking password\n", storedCreds.Username)
@@ -88,7 +88,7 @@ func (db *DB) UserLogin(u User) (User, bool) {
 	if err != nil {
 		// No match, probably `hashedPassword is not the hash of the given password`
 		fmt.Printf("ERROR:CheckPasswordHash:%s\n", err.Error())
-		return User{}, false
+		return User{}, err
 	}
 
 	// Passwords match, but don't return password with User{} because this data will be passed to HTML templates
@@ -97,7 +97,7 @@ func (db *DB) UserLogin(u User) (User, bool) {
 		Email:     storedCreds.Email,
 		FirstName: storedCreds.FirstName,
 		LastName:  storedCreds.LastName,
-		CreatedOn: storedCreds.CreatedOn}, true
+		CreatedOn: storedCreds.CreatedOn}, nil
 }
 
 // InsertUser inserts a new user into the user table
