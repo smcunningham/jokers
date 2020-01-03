@@ -82,7 +82,6 @@ func (c *Client) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("pass"),
 	}
-	fmt.Printf("Email: %s\nPassword: %s\n", creds.Email, creds.Password)
 
 	user, ok := c.DB.UserLogin(creds)
 	if ok {
@@ -137,6 +136,19 @@ func (c *Client) SignupHandler(w http.ResponseWriter, r *http.Request) {
 func (c *Client) SignupActionHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("signupActionHandler", r)
 
+	pwd := r.FormValue("password")
+	pwdConfirm := r.FormValue("password_confirm")
+
+	if !(pwd == pwdConfirm) {
+		log.Println("Passwords do not match, redirecting to registration page")
+
+		if err := registrationTmpl.ExecuteTemplate(w, "registration", nil); err != nil {
+			log.Printf("ERROR:SignupHandler:Failed to execute template: %s", err.Error())
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
 	// Parse and decode request into 'creds' struct
 	creds := models.User{
 		Username:  r.FormValue("username"),
@@ -160,7 +172,7 @@ func (c *Client) SignupActionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RandomJokeHandler handles random jokes being generated on the home page
+// RandomJokeHandler handles random jokes generated on the home page
 func (c *Client) RandomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("randomJokeHandler", r)
 
@@ -178,7 +190,7 @@ func (c *Client) RandomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// PersonalJokeHandler handles personalized jokes being generated from the home page
+// PersonalJokeHandler handles personalized jokes generated from the home page
 func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("personalJokeHandler", r)
 
@@ -199,7 +211,7 @@ func (c *Client) PersonalJokeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// CustomJokeHandler handles custom jokes generated from the custom modal on the home page
+// CustomJokeHandler handles custom jokes generated from the modal on the home page
 func (c *Client) CustomJokeHandler(w http.ResponseWriter, r *http.Request) {
 	consoleLog("CustomJokeHandler", r)
 

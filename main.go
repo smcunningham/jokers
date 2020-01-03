@@ -63,6 +63,6 @@ func main() {
 	router.HandleFunc("/jokes/personal", client.PersonalJokeHandler)
 	router.HandleFunc("/jokes/custom", client.CustomJokeHandler)
 
-	log.Println("listening...")
 	http.ListenAndServe(":3000", client.Session.LoadAndSave(router))
+	log.Println("listening...")
 }
