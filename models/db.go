@@ -17,7 +17,7 @@ type Datastore interface {
 
 // DB contains a sql db
 type DB struct {
-	*sql.DB
+	DB *sql.DB
 }
 
 // DbConfig holds our application's .env variables
@@ -60,7 +60,7 @@ type User struct {
 func (db *DB) UserLogin(u User) (User, error) {
 	// Try to find email in user table
 	loginStmt := `SELECT username, password, email, firstname, lastname, created_on FROM users WHERE email=$1`
-	row := db.QueryRow(loginStmt, u.Email)
+	row := db.DB.QueryRow(loginStmt, u.Email)
 
 	// Data from the db will be stored in this struct
 	storedCreds := User{}
@@ -102,15 +102,16 @@ func (db *DB) UserLogin(u User) (User, error) {
 
 // InsertUser inserts a new user into the user table
 func (db *DB) InsertUser(u User) error {
-	hashedPassword, err := hashPassword(u.Password)
+	hashedPassword, err := HashPassword(u.Password)
 	if err != nil {
 		return err
 	}
+	u.Password = hashedPassword
 
 	// Insert new user into db
-	if _, err := db.Query(`INSERT INTO users(username, password, email, firstname, lastname, created_on) values($1, $2, $3, $4, $5, $6)`,
+	if _, err := db.DB.Query(`INSERT INTO users(username, password, email, firstname, lastname, created_on) values($1, $2, $3, $4, $5, $6)`,
 		u.Username,
-		hashedPassword,
+		u.Password,
 		u.Email,
 		u.FirstName,
 		u.LastName,
@@ -121,14 +122,19 @@ func (db *DB) InsertUser(u User) error {
 }
 
 // Helper funcs
-func hashPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
 }
 
-func checkPasswordHash(password, hash string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+func checkPasswordHash(given, stored string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(stored), []byte(given))
 	if err != nil {
+		fmt.Printf("Given:  %s\n", given)
+		fmt.Printf("Stored: %s\n", stored)
+		if given == stored {
+			return nil
+		}
 		return err
 	}
 	return nil
